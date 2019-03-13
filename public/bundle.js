@@ -67,31 +67,96 @@
 /******/ })
 /************************************************************************/
 /******/ ([
-/* 0 */,
+/* 0 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export drawVideo */
+let drawVideo = (video) => {
+  const videoWidth = video.width;
+  const videoHeight = video.height;
+  let imgData;
+  let image = document.getElementById("image");
+  let canvas = document.getElementById("canvas");
+  let ctx = canvas.getContext('2d');
+  canvas.width = videoWidth
+  canvas.height = videoHeight
+
+
+  let draw = () => {
+    ctx.clearRect(0, 0, videoWidth, videoHeight);
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.translate(-videoWidth, 0);
+    ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
+    imgData = canvas.toDataURL("image/jpeg");
+    ctx.restore();
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+
+/***/ }),
 /* 1 */,
 /* 2 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__openStream__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__loadVideo__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__drawVideo__ = __webpack_require__(0);
 
 
-let video, stream;
-let peer = new Peer({key: 'lwjd5qra8257b9'});
+
+let socket = io("localhost:3500");
+let imgData;
+let fps = 60;
+
 let loadpage = async () => {
-  video = document.getElementById("video");
-  stream = await __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__openStream__["a" /* openStream */])();
-  __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__openStream__["b" /* playVideo */])(stream);
+
+  let video;
+  try {
+    video = await __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__loadVideo__["a" /* loadVideo */])(300, 300, "video");
+  } catch(err) {
+    throw err;
+  }
+
+  let videoWidth = video.width;
+  let videoHeight = video.height;
+  let image = document.getElementById("image");
+  let canvas = document.getElementById("canvas");
+  let ctx = canvas.getContext('2d');
+  canvas.width = videoWidth
+  canvas.height = videoHeight
+
+
+  let draw = () => {
+    ctx.clearRect(0, 0, videoWidth, videoHeight);
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.translate(-videoWidth, 0);
+    ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
+    imgData = canvas.toDataURL("image/jpeg");
+    ctx.restore();
+    requestAnimationFrame(draw);
+  }
+  draw();
 }
+
+navigator.getUserMedia = navigator.getUserMedia ||
+    navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
 loadpage();
 
-$(document).ready(() => {
-  $("#call").click(() => {
-    let id = $("#peerId").val();
-    let call = peer.call(id, stream)
-  });
-});
+setInterval(() => {
+  socket.emit("imgData", imgData);
+}, 1000/fps);
+
+socket.on("image", imgData => {
+  $("#image").attr("src", imgData)
+})
 
 
 /***/ }),
@@ -99,26 +164,31 @@ $(document).ready(() => {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return openStream; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return playVideo; });
-let openStream = () => {
-  let config = {
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return loadVideo; });
+let setupCamera = async (videoWidth, videoHeight, videoID) => {
+  let video = document.getElementById(videoID);
+  video.width = videoWidth;
+  video.height = videoHeight;
+  let stream = await navigator.mediaDevices.getUserMedia({
     'audio': false,
     'video': {
       facingMode: 'user',
-      width: 640,
-      height: 480,
+      width: videoWidth,
+      height: videoHeight,
     },
-  }
-  return navigator.mediaDevices.getUserMedia(config);
+  });
+  video.srcObject = stream;
+  return new Promise((resolve) => {
+    video.onloadedmetadata = () => {
+      resolve(video);
+    };
+  });
 }
 
-let playVideo = (clientStream) => {
-  let video = document.getElementById("video");
-  video.srcObject = clientStream;
-  video.onloadedmetadata = () => {
-    video.play();
-  };
+let loadVideo = async (videoWidth, videoHeight, videoID) => {
+  const video = await setupCamera(videoWidth, videoHeight, videoID);
+  video.play();
+  return video;
 }
 
 

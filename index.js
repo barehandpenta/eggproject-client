@@ -10,8 +10,8 @@ server.listen(process.env.PORT || 3500);
 
 io.on('connection', socket => {
   console.log("hello " + socket.id);
-  socket.on("image", imgData => {
-    io.emit("imgData", imgData);
+  socket.on("imgData", imgData => {
+    io.emit("image", imgData);
   })
 });
 app.get('/', (req,res) => res.render('home.ejs'));

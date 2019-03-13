@@ -1,11 +1,12 @@
-let socket = io("localhost:3000")
 export let drawVideo = (video) => {
+  const videoWidth = video.width;
+  const videoHeight = video.height;
+  let imgData;
+  let image = document.getElementById("image");
   let canvas = document.getElementById("canvas");
   let ctx = canvas.getContext('2d');
-  let videoWidth = video.width;
-  let videoHeight = video.height;
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = videoWidth
+  canvas.height = videoHeight
 
 
   let draw = () => {
@@ -14,8 +15,7 @@ export let drawVideo = (video) => {
     ctx.scale(-1, 1);
     ctx.translate(-videoWidth, 0);
     ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
-    let imgData = canvas.toDataURL("data/jpeg");
-    socket.emit("image", imgData);
+    imgData = canvas.toDataURL("image/jpeg");
     ctx.restore();
 
     requestAnimationFrame(draw);

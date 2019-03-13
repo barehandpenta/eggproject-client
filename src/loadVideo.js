@@ -19,7 +19,7 @@ let setupCamera = async (videoWidth, videoHeight, videoID) => {
 }
 
 export let loadVideo = async (videoWidth, videoHeight, videoID) => {
-  let video = await setupCamera(videoWidth, videoHeight, videoID);
+  const video = await setupCamera(videoWidth, videoHeight, videoID);
   video.play();
   return video;
 }
